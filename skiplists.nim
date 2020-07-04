@@ -23,6 +23,7 @@ macro ex(x: untyped): untyped =
 
 type
   SkipListError* = object of IndexError
+  NilSkipListError* = object of ValueError
 
   SkipListObj[T] = object
     over: SkipList[T]
@@ -48,12 +49,40 @@ type
 # lengths, girths, etc.
 #
 
+converter toSeq[T](s: SkipList[T]): seq[T]
+
+template staySorted(s: SkipList; body: untyped): untyped =
+  try:
+    body
+  finally:
+    when not defined(release):
+      if not s.isNil:
+        doAssert toSeq(s) == sorted(toSeq(s))
+
 proc newSkipList*[T](v: T): SkipList[T] =
   ## Instantiate a SkipList from value `v`.
   result = SkipList[T](value: v)
   when false:
     for i in 2 .. initialSize:
       result = SkipList[T](value: v, down: result)
+
+proc toSkipList*[T](values: var seq[T]): SkipList[T] =
+  ## Instantiate a SkipList from values `values`.  Will sort the input.
+  sort(values)
+  if len(values) > 0:
+    result = values[0].newSkipList
+    var s = result
+    for item in values[1..^1]:
+      s.over = item.newSkipList
+      s = s.over
+
+proc toSkipList*[T](values: openArray[T]): SkipList[T] =
+  ## Create a SkipList from an openArray `values`.
+  for item in items(values):
+    if result.isNil:
+      result = newSkipList(item)
+    else:
+      add(result, item)
 
 proc isEmpty*(s: SkipList): bool =
   ## True if SkipList `s` holds no items.
@@ -66,11 +95,14 @@ proc defaultPred(up: SkipList; here: SkipList; child: SkipList): bool =
   result = rand(1 .. 4) == 1
 
 func `===`*(a, b: SkipList): bool =
+  ## `true` if SkipLists `a` and `b` share the same memory, else `false`.
   result = cast[int](a) == cast[int](b)
 
-template `=!=`*(a, b: SkipList): bool = not(a === b)
+template `=!=`*(a, b: SkipList): bool =
+  ## `false` if SkipLists `a` and `b` share the same memory, else `true`.
+  not(a === b)
 
-template `<>`*(a, b: SkipListObj): cmp =
+template `<>`(a, b: SkipListObj): cmp =
   if a.value < b.value:
     Less
   elif a.value == b.value:
@@ -78,7 +110,8 @@ template `<>`*(a, b: SkipListObj): cmp =
   else:
     More
 
-template `<>`*(a, b: ref SkipListObj): cmp =
+template `<>`(a, b: SkipList): cmp =
+  ## Compare SkipList `a` and `b`.
   if a.isNil or b.isNil:
     if a.isNil and b.isNil:
       Equal
@@ -89,8 +122,24 @@ template `<>`*(a, b: ref SkipListObj): cmp =
   else:
     a[] <> b[]
 
-proc `<`*(a, b: SkipList): bool = a <> b == Less
-proc `==`*(a, b: SkipList): bool = a <> b == Equal
+proc `<`*(a, b: SkipList): bool =
+  case a <> b
+  of Less:
+    result = true
+  of Undefined:
+    raise newException(NilSkipListError, "nil skiplist comparison")
+  else:
+    discard
+
+proc `==`*(a, b: SkipList): bool =
+  ## `true` if SkipList `a` is equal to SkipList `b`, else `false`.
+  case a <> b
+  of Equal:
+    result = true
+  of Undefined:
+    raise newException(NilSkipListError, "nil skiplist comparison")
+  else:
+    discard
 
 template iterIt(s: typed; body: untyped): typed =
   if not s.isNil:
@@ -112,7 +161,7 @@ iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
     for item in items(s):
       assert item == "foobar"
 
-  s.iterIt:
+  iterIt(s):
     yield it.value
 
 iterator items*[T](s: SkipList[T]): T {.ex.} =
@@ -122,7 +171,7 @@ iterator items*[T](s: SkipList[T]): T {.ex.} =
     for item in items(s):
       assert item == 3
 
-  s.iterIt:
+  iterIt(s):
     yield it.value
 
 iterator pairs*[T](s: SkipList[T]): tuple[index: int, value: T] {.ex.} =
@@ -134,7 +183,7 @@ iterator pairs*[T](s: SkipList[T]): tuple[index: int, value: T] {.ex.} =
       assert value == 3
 
   var index = 0
-  s.iterIt:
+  iterIt(s):
     yield (index: index, value: it.value)
     inc index
 
@@ -165,9 +214,6 @@ proc find*[T](s: SkipList[T]; v: T): SkipList[T] =
     raise newException(KeyError, "not found")
 
 proc find*[T](s: SkipList[T]; v: T; r: var SkipList[T]): bool =
-  when not defined(release):
-    assert toSeq(s) == sorted(toSeq(s))
-
   let v = SkipList[T](value: v)
   result = find(s, v, r)
   when not defined(release):
@@ -193,14 +239,17 @@ proc count*(s: SkipList): int {.ex.} =
     inc result
 
 converter toSeq[T](s: SkipList[T]): seq[T] =
-  result = newSeqOfCap[T](count(s))
-  for item in items(s):
-    result.add item
-    #result[len(result)] = item
+  if s.isNil:
+    let
+      size = count(s)
+    result = newSeqOfCap[T](size)
+    result.setLen(size)
+    for index, item in pairs(s):
+      result[index] = item
 
 proc `==`*[T](s: SkipList[T]; q: openArray[T]): bool =
-  var i = 0
   block unequal:
+    var i = 0
     for item in items(s):
       if i <= q.high:
         if item != q[i]:
@@ -253,40 +302,42 @@ proc append[T](s: var SkipList[T]; n: SkipList[T]; up: var SkipList[T];
 
 proc insert[T](s: var SkipList[T]; n: SkipList[T]; up: var SkipList[T];
                pred: SkipListPred[T] = defaultPred) =
-  if s.isNil:
-    raise newException(ValueError, "nil skiplist")
-  else:
-    assert n < s
-    if s.down.isNil:
-      s = SkipList[T](over: s, value: n.value)
+  staySorted(s):
+    if s.isNil:
+      raise newException(ValueError, "nil skiplist")
     else:
-      insert(s.down, n, s, pred = pred)
-    if s =!= up:
-      assert n <= up
-      if n < up:
-        # insertions always grow
-        up = SkipList[T](over: up, value: n.value, down: s)
+      assert n < s
+      if s.down.isNil:
+        s = SkipList[T](over: s, value: n.value)
+      else:
+        insert(s.down, n, s, pred = pred)
+      if s =!= up:
+        assert n <= up
+        if n < up:
+          # insertions always grow
+          up = SkipList[T](over: up, value: n.value, down: s)
 
 proc add*[T](s: var SkipList[T]; n: SkipList[T];
              pred: SkipListPred[T] = defaultPred) =
   ## insert a SkipList `n` into SkipList `s`
-  if s.isNil:
-    s = n
-  else:
-    case s <> n:
-    of More:
-      insert(s, n, s, pred = pred)
-    of Equal:
-      discard append(s, n, s, pred = pred)
-    of Less:
-      if s.over.isNil:
+  staySorted(s):
+    if s.isNil:
+      s = n
+    else:
+      case s <> n:
+      of More:
+        insert(s, n, s, pred = pred)
+      of Equal:
         discard append(s, n, s, pred = pred)
-      elif s.over <= n:
-        add(s.over, n, pred = pred)
-      else:
+      of Less:
+        if s.over.isNil:
+          discard append(s, n, s, pred = pred)
+        elif s.over <= n:
+          add(s.over, n, pred = pred)
+        else:
+          raise newException(SkipListError, "skiplist corrupt")
+      of Undefined:
         raise newException(SkipListError, "skiplist corrupt")
-    of Undefined:
-      raise newException(SkipListError, "skiplist corrupt")
 
 proc add*[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred) =
   ## insert a value `v` in SkipList `s`
@@ -307,24 +358,28 @@ when isMainModule:
     test "simple comparisons":
       let b = 2.newSkipList
       let c = 1.newSkipList
-      check a == [1]
-      check a < b
-      check a <= c
-      check c >= a
-      check b > a
-      check b >= a
-      check a <= b
-      check a != b
-      check a == c
+      check:
+        a == [1]
+        a < b
+        a <= c
+        c >= a
+        b > a
+        b >= a
+        a <= b
+        a != b
+        a == c
 
     test "nils and stuff":
       var
         n: SkipList[int]
         m: SkipList[int]
-      check a != n
-      check n != a
-      check n == m
-      check n == []
+      expect NilSkipListError:
+        discard a != n
+      expect NilSkipListError:
+        discard n != a
+      check:
+        n == m
+        n == []
       n.add 5
       check n == [5]
 
@@ -361,3 +416,9 @@ when isMainModule:
       check s == [3, 3, 5, 5, 7, 9, 9, 11]
       s.add 11
       check s == [3, 3, 5, 5, 7, 9, 9, 11, 11]
+
+    test "sequence conversions":
+      var
+        s = @[1, 2, 4, 6, 5].toSkipList
+      check count(s) == 5
+      check s == [1, 2, 4, 5, 6]
