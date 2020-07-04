@@ -330,12 +330,16 @@ when isMainModule:
 
     test "finding things":
       var f: SkipList[int]
+      var r: SkipList[int]
       for n in countDown(10, 0):
         f.add n
       for n in countUp(0, 10):
         check n in f
       check f.find(8).over == 9
       check f.find(3).over == 4
+      expect KeyError:
+        check f.find(11) == []
+      check f.find(11, r) == false
 
     test "adding stuff out of order":
       var
