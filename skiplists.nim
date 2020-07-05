@@ -335,9 +335,10 @@ proc add*[T](s: var SkipList[T]; n: SkipList[T];
       of Equal:
         discard append(s, n, s, pred = pred)
       of Less:
-        if s.over.isNil or s.over > n:
+        case s.over <> n
+        of Undefined, More:
           discard append(s, n, s, pred = pred)
-        else: # s.over <= n
+        else:
           add(s.over, n, pred = pred)
       of Undefined:
         raise newException(SkipListError, "skiplist corrupt")
