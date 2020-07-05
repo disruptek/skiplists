@@ -3,8 +3,10 @@ import std/intsets
 import std/sequtils
 
 import criterion
-
 import skiplists
+
+when not defined(danger):
+  {.fatal: "useless outside of -d:danger, right?".}
 
 var cfg = newDefaultConfig()
 
