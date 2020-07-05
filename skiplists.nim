@@ -1,7 +1,5 @@
 import std/random
-
-when not defined(release):
-  import std/algorithm
+import std/algorithm
 
 when defined(nimdoc):
   import std/macros
@@ -141,7 +139,7 @@ proc `==`*(a, b: SkipList): bool =
   else:
     discard
 
-template iterIt(s: typed; body: untyped): typed =
+template iterIt(s: typed; body: untyped): untyped =
   if not s.isNil:
     var
       it {.inject.} = s
