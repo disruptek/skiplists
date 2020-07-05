@@ -1,3 +1,4 @@
+import std/hashes
 import std/random
 import std/algorithm
 
@@ -185,6 +186,12 @@ iterator pairs*[T](s: SkipList[T]): tuple[index: int, value: T] {.ex.} =
     yield (index: index, value: it.value)
     inc index
 
+proc hash*(s: SkipList): Hash =
+  var h: Hash = 0
+  for item in items(s):
+    h = h !& hash(item)
+  result = !$h
+
 proc find*[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
   if not s.isNil:
     if v == s:
@@ -266,11 +273,11 @@ proc `$`(s: SkipList): string =
       result.add " -> "
       result.add $s.down
 
-proc contains[T](s: SkipList[T]; v: SkipList[T]): bool =
+proc contains*[T](s: SkipList[T]; v: SkipList[T]): bool =
   var n: SkipList[T]
   result = s.find(v, n)
 
-proc contains[T](s: SkipList[T]; v: T): bool {.ex.} =
+proc contains*[T](s: SkipList[T]; v: T): bool {.ex.} =
   runnableExamples:
     var s = SkipList[int]
     assert 5 notin s
@@ -328,12 +335,10 @@ proc add*[T](s: var SkipList[T]; n: SkipList[T];
       of Equal:
         discard append(s, n, s, pred = pred)
       of Less:
-        if s.over.isNil:
+        if s.over.isNil or s.over > n:
           discard append(s, n, s, pred = pred)
-        elif s.over <= n:
+        else: # s.over <= n
           add(s.over, n, pred = pred)
-        else:
-          raise newException(SkipListError, "skiplist corrupt")
       of Undefined:
         raise newException(SkipListError, "skiplist corrupt")
 
