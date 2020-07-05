@@ -10,7 +10,7 @@ proc execCmd(cmd: string) =
   exec cmd
 
 proc execTest(test: string) =
-  when true:
+  when false:
     execCmd "nim c        -f -r " & test
     execCmd "nim c -d:danger -r " & test
   else:
