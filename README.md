@@ -1,7 +1,8 @@
 # skiplists
 
-A _skip list_ is an ordered linked-list. Skip lists can be stacked such that a
-shorter parent skip list can serve as an index into a larger child list.
+A _skip list_ is an ordered linked-list. Skip lists can be stacked such that
+a shorter parent skip list can serve as an index into a larger child list. In
+this implementation, such a stack is itself a skip list, as is each element.
 
 - `cpp +/ nim-1.0` [![Build Status](https://travis-ci.org/disruptek/skiplists.svg?branch=master)](https://travis-ci.org/disruptek/skiplists)
 - `arc +/ cpp +/ nim-1.3` [![Build Status](https://travis-ci.org/disruptek/skiplists.svg?branch=devel)](https://travis-ci.org/disruptek/skiplists)
