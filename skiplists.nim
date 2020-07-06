@@ -56,7 +56,7 @@ template staySorted(s: SkipList; body: untyped): untyped =
   finally:
     when not defined(release):
       if not s.isNil:
-        doAssert toSeq(s) == sorted(toSeq(s))
+        assert toSeq(s) == sorted(toSeq(s))
 
 proc newSkipList*[T](v: T): SkipList[T] =
   ## Instantiate a SkipList from value `v`.
@@ -139,6 +139,17 @@ proc `==`*(a, b: SkipList): bool =
     raise newException(NilSkipListError, "nil skiplist comparison")
   else:
     discard
+
+when defined(gcDestructors):
+  proc `<=`*(a, b: SkipList): bool =
+    ## `true` if SkipList `a` is less or equal to SkipList `b`, else `false`.
+    case a <> b
+    of Equal, Less:
+      result = true
+    of Undefined:
+      raise newException(NilSkipListError, "nil skiplist comparison")
+    else:
+      discard
 
 template iterIt(s: typed; body: untyped): untyped =
   if not s.isNil:
@@ -243,15 +254,6 @@ proc count*(s: SkipList): int {.ex.} =
   for item in items(s):
     inc result
 
-converter toSeq[T](s: SkipList[T]): seq[T] =
-  if not s.isNil:
-    let
-      size = count(s)
-    result = newSeqOfCap[T](size)
-    setLen(result, size)
-    for index, item in pairs(s):
-      result[index] = item
-
 proc `==`*[T](s: SkipList[T]; q: openArray[T]): bool =
   block unequal:
     var i = 0
@@ -264,11 +266,27 @@ proc `==`*[T](s: SkipList[T]; q: openArray[T]): bool =
       inc i
     result = i == q.len
 
+converter toSeq[T](s: SkipList[T]): seq[T] =
+  if not s.isNil:
+    let
+      size = count(s)
+    result = newSeqOfCap[T](size)
+    when defined(gcDestructors):
+      for item in items(s):
+        assert result.len <= size
+        add(result, item)
+    else:
+      setLen(result, size)
+      for index, item in pairs(s):
+        result[index] = item
+
 proc `$`(s: SkipList): string =
   ## a string representing SkipList `s`
-  result = $(toSeq(s))
-  result[0] = '*'
-  if not s.isNil:
+  if s.isNil:
+    result = "*[]"
+  else:
+    result = $(toSeq(s))
+    result[0] = '*'
     if not s.down.isNil:
       result.add " -> "
       result.add $s.down
@@ -294,7 +312,7 @@ proc append[T](s: var SkipList[T]; n: SkipList[T]; up: var SkipList[T];
   if s.isNil:
     raise newException(ValueError, "nil skiplist")
   else:
-    assert n >= s
+    assert n >= s, $n & " versus " & $s
     if s.down.isNil:
       result = s != n # don't grow duplicates
       s.over = SkipList[T](over: s.over, value: n.value)
@@ -353,8 +371,20 @@ when isMainModule:
 
   proc `<`[T](s: SkipList[T]; v: T): bool = s.value < v
   proc `==`[T](s: SkipList[T]; v: T): bool = s.value == v
-  proc `<`[T](v: T; s: SkipList[T]): bool = v < s.value
-  proc `==`[T](v: T; s: SkipList[T]): bool = v == s.value
+  proc `<`[T](v: T; s: SkipList[T]): bool =
+    when defined(gcDestructors):
+      result = not s.isNil and v < s.value
+    else:
+      if s.isNil:
+        raise newException(NilSkipListError, "nil skiplist comparison")
+      v < s.value
+  proc `==`[T](v: T; s: SkipList[T]): bool =
+    when defined(gcDestructors):
+      result = not s.isNil and v == s.value
+    else:
+      if s.isNil:
+        raise newException(NilSkipListError, "nil skiplist comparison")
+      result = v == s.value
 
   suite "skiplists":
     let a = 1.newSkipList
