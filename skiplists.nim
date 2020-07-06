@@ -244,7 +244,7 @@ proc count*(s: SkipList): int {.ex.} =
     inc result
 
 converter toSeq[T](s: SkipList[T]): seq[T] =
-  if s.isNil:
+  if not s.isNil:
     let
       size = count(s)
     result = newSeqOfCap[T](size)
