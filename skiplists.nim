@@ -329,7 +329,7 @@ proc add*[T](s: var SkipList[T]; n: SkipList[T];
     if s.isNil:
       s = n
     else:
-      case s <> n:
+      case s <> n
       of More:
         insert(s, n, s, pred = pred)
       of Equal:
