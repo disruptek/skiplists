@@ -248,7 +248,7 @@ converter toSeq[T](s: SkipList[T]): seq[T] =
     let
       size = count(s)
     result = newSeqOfCap[T](size)
-    result.setLen(size)
+    setLen(result, size)
     for index, item in pairs(s):
       result[index] = item
 
