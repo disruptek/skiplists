@@ -1,5 +1,7 @@
 import testes
-import skiplists
+
+# access internal fields
+include skiplists
 
 testes:
 
