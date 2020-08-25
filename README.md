@@ -1,11 +1,13 @@
 # skiplists
 
+[![Test Matrix](https://github.com/disruptek/skiplists/workflows/CI/badge.svg)](https://github.com/disruptek/skiplists/actions?query=workflow%3ACI)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/disruptek/skiplists?style=flat)](https://github.com/disruptek/skiplists/releases/latest)
+![Minimum supported Nim version](https://img.shields.io/badge/nim-1.0.8%2B-informational?style=flat&logo=nim)
+[![License](https://img.shields.io/github/license/disruptek/skiplists?style=flat)](#license)
+
 A _skip list_ is an ordered linked-list. Skip lists can be stacked such that
 a shorter parent skip list can serve as an index into a larger child list. In
 this implementation, such a stack is itself a skip list, as is each element.
-
-- `cpp +/ nim-1.0` [![Build Status](https://travis-ci.org/disruptek/skiplists.svg?branch=master)](https://travis-ci.org/disruptek/skiplists)
-- `arc +/ cpp +/ nim-1.3` [![Build Status](https://travis-ci.org/disruptek/skiplists.svg?branch=devel)](https://travis-ci.org/disruptek/skiplists)
 
 ## Benefits
 

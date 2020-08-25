@@ -4,6 +4,7 @@ description = "skiplists"
 license = "MIT"
 
 requires "nim >= 1.0.0 & < 2.0.0"
+requires "https://github.com/disruptek/testes >= 0.2.2 & < 1.0.0"
 
 proc execCmd(cmd: string) =
   echo "exec: " & cmd
@@ -23,6 +24,3 @@ proc execTest(test: string) =
       execCmd "nim c  -d:danger -r " & test
       execCmd "nim c   --gc:arc -r " & test
       execCmd "nim cpp --gc:arc -r " & test
-
-task test, "run tests for travis":
-  execTest("skiplists.nim")
