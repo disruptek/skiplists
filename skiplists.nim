@@ -297,7 +297,7 @@ proc contains*[T](s: SkipList[T]; v: SkipList[T]): bool =
 
 proc contains*[T](s: SkipList[T]; v: T): bool {.ex.} =
   runnableExamples:
-    var s = SkipList[int]
+    var s: SkipList[int]
     assert 5 notin s
     s.add 5
     s.add 9
