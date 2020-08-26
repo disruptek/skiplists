@@ -21,8 +21,8 @@ For more details, [see the Wikipedia article on Skip Lists](https://en.wikipedia
 ## Installation
 
 ```
-$ git clone https://github.com/disruptek/skiplists
-$ echo '--path="$config/skiplists"' >> nim.cfg
+$ git submodule add https://github.com/disruptek/skiplists
+$ echo '--path="$config/skiplists/"' >> nim.cfg
 ```
 
 ## Documentation
