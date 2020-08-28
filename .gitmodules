@@ -4,3 +4,6 @@
 [submodule "cutelog"]
 	path = cutelog
 	url = https://github.com/disruptek/cutelog
+[submodule "criterion"]
+	path = criterion
+	url = https://github.com/disruptek/criterion
