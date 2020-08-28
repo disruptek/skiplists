@@ -13,7 +13,7 @@ var cfg = newDefaultConfig()
 benchmark cfg:
 
   var
-    rick = toSeq(0 .. 1_000)
+    rick = toSeq(0 .. 100_000)
 
   var q = toSkipList(rick)
 
