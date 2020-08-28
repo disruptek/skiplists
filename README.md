@@ -4,6 +4,7 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/disruptek/skiplists?style=flat)](https://github.com/disruptek/skiplists/releases/latest)
 ![Minimum supported Nim version](https://img.shields.io/badge/nim-1.0.8%2B-informational?style=flat&logo=nim)
 [![License](https://img.shields.io/github/license/disruptek/skiplists?style=flat)](#license)
+[![buy me a coffee](https://img.shields.io/badge/donate-buy%20me%20a%20coffee-orange.svg)](https://www.buymeacoffee.com/disruptek)
 
 A _skip list_ is an ordered linked-list. Skip lists can be stacked such that
 a shorter parent skip list can serve as an index into a larger child list. In
