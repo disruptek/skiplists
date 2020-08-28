@@ -149,9 +149,15 @@ proc `==`*(a, b: SkipList): bool =
   else:
     result = false
 
+# ref equality semantics demand this!
 template `<=`*(a, b: SkipList): bool =
   ## `true` if SkipList `a` is less or equal to SkipList `b`, else `false`.
   a < b or a == b
+
+# ref equality semantics demand this!
+template `>=`*(a, b: SkipList): bool =
+  ## `true` if SkipList `a` is more or equal to SkipList `b`, else `false`.
+  a > b or a == b
 
 template iterIt(s: typed; body: untyped) =
   if not s.isNil:
