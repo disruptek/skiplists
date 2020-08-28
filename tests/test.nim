@@ -131,7 +131,7 @@ testes:
     var
       s: SkipList[int]
     const
-      size = 500_000
+      size = 100_000
     randomize()
     for i in 1 .. size:
       s.add rand(size)
