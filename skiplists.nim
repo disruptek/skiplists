@@ -149,6 +149,10 @@ proc `==`*(a, b: SkipList): bool =
   else:
     result = false
 
+template `<=`(a, b: SkipList): bool =
+  ## `true` if SkipList `a` is less or equal to SkipList `b`, else `false`.
+  a < b or a == b
+
 template iterIt(s: typed; body: untyped) =
   if not s.isNil:
     var
