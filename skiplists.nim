@@ -1,7 +1,6 @@
 import std/sequtils
 import std/hashes
 import std/random
-import std/algorithm
 
 const
   skiplistsChecks {.booldefine.} = true
@@ -181,9 +180,34 @@ iterator file(s: SkipList): SkipList =
     yield s
     s = s.down
 
+iterator values[T](s: SkipList[T]): string =
+  ## Yield each peer value of SkipList `s`.
+  var s = s
+  while not s.isNil:
+    #yield $s.value
+    if s.down.isNil:
+      yield $s.value & " x " & $(cast[int](s))
+    else:
+      yield $s.value & " d " & $(cast[int](s.down))
+    s = s.over
+
+proc `$`(s: SkipList): string {.raises: [].} =
+  ## A string representing SkipList `s`; intentionally not exported.
+  if s.isNil:
+    result = "\n*[]"
+  else:
+    var q = sequtils.toSeq s.values
+    result = $q
+    result[0] = '*'
+    result = "\n" & result
+    if not s.down.isNil:
+      result.add $s.down
+
 when defined(release) or not skiplistsChecks:
   template check*(s: SkipList; args: varargs[string, `$`]) = discard
 else:
+  import std/strutils
+
   proc check*(s: SkipList; args: varargs[string, `$`]) =
     var msg = join(args, " ")
     try:
@@ -206,7 +230,7 @@ else:
       if msg.len > 0:
         msg &= "; "
       msg &= e.msg
-      echo "check input:\n", s
+      echo "check input:\n", $s
       raise newException(SkipListDefect, msg)
 
 iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
@@ -221,17 +245,6 @@ iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
   iterIt(s):
     yield it.value
   check s, "mitems()"
-
-iterator values[T](s: SkipList[T]): string =
-  ## Yield each peer value of SkipList `s`.
-  var s = s
-  while not s.isNil:
-    #yield $s.value
-    if s.down.isNil:
-      yield $s.value & " x " & $(cast[int](s))
-    else:
-      yield $s.value & " d " & $(cast[int](s.down))
-    s = s.over
 
 iterator items*[T](s: SkipList[T]): T {.ex.} =
   ## Iterate over entries in SkipList `s`.
@@ -343,18 +356,6 @@ converter toSeq[T](s: SkipList[T]): seq[T] =
         setLen(result, size)
         for index, item in pairs(s):
           result[index] = item
-
-proc `$`(s: SkipList): string {.raises: [].} =
-  ## A string representing SkipList `s`; intentionally not exported.
-  if s.isNil:
-    result = "\n*[]"
-  else:
-    var q = sequtils.toSeq s.values
-    result = $q
-    result[0] = '*'
-    result = "\n" & result
-    if not s.down.isNil:
-      result.add $s.down
 
 proc contains[T](s: SkipList[T]; v: SkipList[T]): bool =
   ## `true` if the SkipList `s` contains SkipList `v`.
