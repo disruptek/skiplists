@@ -522,3 +522,7 @@ proc toSkipList*[T](values: openArray[T]): SkipList[T] =
 proc clear*(s: var SkipList) =
   ## Empty SkipList `s` of all entries.
   s = nil
+
+template append*[T](s: var SkipList[T]; value: T) =
+  ## Alias for `add(s, value)`.
+  add(s, value)
