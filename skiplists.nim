@@ -167,11 +167,13 @@ iterator values[T](s: SkipList[T]): string =
   ## Yield each peer value of SkipList `s`.
   var s = s
   while not s.isNil:
-    #yield $s.value
-    if s.down.isNil:
-      yield $s.value & " x " & $(cast[int](s))
+    when defined(release):
+      yield $s.value
     else:
-      yield $s.value & " d " & $(cast[int](s.down))
+      if s.down.isNil:
+        yield $s.value & " x " & $(cast[int](s))
+      else:
+        yield $s.value & " d " & $(cast[int](s.down))
     s = s.over
 
 proc `$`(s: SkipList): string {.raises: [].} =
@@ -227,7 +229,6 @@ iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
 
   iterIt(s):
     yield it.value
-  check s, "mitems()"
 
 iterator items*[T](s: SkipList[T]): T {.ex.} =
   ## Iterate over entries in SkipList `s`.
@@ -380,6 +381,8 @@ proc constrain(s: var SkipList; n: SkipList;
           if test in comp:
             result = test
             break
+          elif parent.rank == narrow.rank:
+            assert false, "probably not what you want"
 
 proc append[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
   assert not s.isNil
@@ -436,7 +439,6 @@ proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
     else:
       # just omit the entire file
       s = s.over
-  check s
 
 proc remove*[T](s: var SkipList[T]; v: T): bool {.discardable.} =
   result = remove(s, newSkipList v)
@@ -455,12 +457,11 @@ proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
     assert s <> n == Equal
     # add a rank; we're already as tall as possible
     s = SkipList[T](value: n.value, down: s)
-    check s, "grow() equal"
   of Less:
+    assert p.over <> n in {Equal}
     # if s and p aren't the same skiplist but they have the same rank,
     if s =!= p and s.rank == p.rank:
       # add a rank with s and p nodes
-      assert p.over <> n in {Equal}
       s = SkipList[T](value: s.value, down: s,
                       over: SkipList[T](value: n.value, down: p.over))
     elif s.rank != p.rank:
@@ -468,15 +469,11 @@ proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
       raise newException(Defect, "expected s.rank to match p.rank")
     elif parent.isNil:
       # essentially, add a rank with s and p values
-      assert p.over <> n in {Equal}
       s = SkipList[T](value: s.value, down: s,
                       over: SkipList[T](value: n.value, down: p.over))
     # this is a non-recursive append, basically
     else:
-      assert p.rank != parent.rank
-      assert p <> parent == Equal
       parent.over = SkipList[T](value: n.value, over: parent.over)
-    check s, "grow() less"
 
 proc add[T](s: var SkipList[T]; n: SkipList[T]; pred: SkipListPred[T]) =
   ## Add SkipList `n` into SkipList `s`.
@@ -504,7 +501,7 @@ proc add[T](s: var SkipList[T]; n: SkipList[T]; pred: SkipListPred[T]) =
         discard grow(parent, n)
 
 proc add*[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred) =
-  ## insert a value `v` in SkipList `s`
+  ## Add a value `v` into SkipList `s`.
   add(s, SkipList[T](value: v), pred = pred)
   check s, "add()"
 
@@ -516,3 +513,7 @@ proc toSkipList*[T](values: openArray[T]): SkipList[T] =
     else:
       add(result, item)
   check result, "toSkipList()"
+
+proc clear*(s: var SkipList) =
+  ## Empty SkipList `s` of all entries.
+  s = nil
