@@ -327,19 +327,14 @@ converter toSeq[T](s: SkipList[T]): seq[T] =
     let
       size = count(s)
     result = newSeqOfCap[T](size)
-    when true:
+    when false and defined(gcDestructors):
+      for item in items(s):
+        assert result.len <= size
+        add(result, item)
+    else:
       setLen(result, size)
       for index, item in pairs(s):
         result[index] = item
-    else:
-      when defined(gcDestructors):
-        for item in items(s):
-          assert result.len <= size
-          add(result, item)
-      else:
-        setLen(result, size)
-        for index, item in pairs(s):
-          result[index] = item
 
 proc contains[T](s: SkipList[T]; v: SkipList[T]): bool =
   ## `true` if the SkipList `s` contains SkipList `v`.
