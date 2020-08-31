@@ -44,12 +44,12 @@ testes:
     try:
       discard a != n
       assert false, "expected an exception"
-    except NilSkipListError:
+    except EmptySkipListError:
       discard
     try:
       discard n != a
       assert false, "expected an exception"
-    except NilSkipListError:
+    except EmptySkipListError:
       discard
     assert n == m
     assert n == []

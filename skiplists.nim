@@ -10,15 +10,20 @@ const
 
 when (NimMajor, NimMinor) <= (1, 2):
   type
-    SkipListError* = object of IndexError
-    SkipListDefect* = object of AssertionError
+    SkipListError* = object of IndexError ##
+      ## A specified index that should have existed did not.
+    SkipListDefect* = object of AssertionError ##
+      ## A defect was detected in the SkipList implementation.
 else:
   type
-    SkipListError* = object of IndexDefect
-    SkipListDefect* = object of AssertionDefect
+    SkipListError* = object of IndexDefect ##
+      ## A specified index that should have existed did not.
+    SkipListDefect* = object of AssertionDefect ##
+      ## A defect was detected in the SkipList implementation.
 
 type
-  NilSkipListError* = object of ValueError
+  EmptySkipListError* = object of ValueError ##
+    ## An empty SkipList is invalid for this operation.
 
   SkipListObj[T] = object
     over: SkipList[T]
@@ -26,9 +31,14 @@ type
     value: T
   SkipList*[T] = ref SkipListObj[T]
 
-  SkipListPred*[T] = proc(up: SkipList[T];
-                          here: SkipList[T];
-                          child: SkipList[T]): bool
+  SkipListPred*[T] = proc(up: SkipList[T]; here: SkipList[T];
+                          child: SkipList[T]): bool ##
+    ## The predicate used to determine whether the SkipList
+    ## will grow during an add() operation.
+    ##
+    ## :up: a larger scope of the SkipList, perhaps top-most
+    ## :here: a narrower scope of the SkipList
+    ## :child: a SkipList holding the new value
 
   cmp* {.pure.} = enum ## Comparisons between SkipLists
     Undefined
@@ -110,7 +120,7 @@ proc `<`*(a, b: SkipList): bool =
   of Less:
     result = true
   of Undefined:
-    raise newException(NilSkipListError, "nil skiplist comparison")
+    raise newException(EmptySkipListError, "invalid comparison")
   else:
     result = false
 
@@ -120,7 +130,7 @@ proc `==`*(a, b: SkipList): bool =
   of Equal:
     result = true
   of Undefined:
-    raise newException(NilSkipListError, "nil skiplist comparison")
+    raise newException(EmptySkipListError, "invalid comparison")
   else:
     result = false
 
@@ -189,11 +199,11 @@ proc `$`(s: SkipList): string {.raises: [].} =
       result.add $s.down
 
 when defined(release) or not skiplistsChecks:
-  template check*(s: SkipList; args: varargs[string, `$`]) = discard
+  template check(s: SkipList; args: varargs[string, `$`]) = discard
 else:
   import std/strutils
 
-  proc check*(s: SkipList; args: varargs[string, `$`]) =
+  proc check(s: SkipList; args: varargs[string, `$`]) =
     var msg = join(args, " ")
     try:
       for r in s.file:
@@ -293,7 +303,7 @@ proc find[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
           result = true
           break
         of Less:
-          raise newException(SkipListError, "skiplist corrupt")
+          raise newException(SkipListDefect, "out of order")
 
 proc find*[T](s: SkipList[T]; v: T): SkipList[T] =
   if not find(s, SkipList[T](value: v), result):
@@ -461,7 +471,7 @@ proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
                       over: SkipList[T](value: n.value, down: p.over))
     elif s.rank != p.rank:
       # confirm that grow received input that was "close"
-      raise newException(Defect, "expected s.rank to match p.rank")
+      raise newException(SkipListDefect, "s.rank != p.rank")
     elif parent.isNil:
       # essentially, add a rank with s and p values
       s = SkipList[T](value: s.value, down: s,
