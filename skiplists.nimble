@@ -5,6 +5,8 @@ license = "MIT"
 
 requires "nim >= 1.0.0 & < 2.0.0"
 requires "https://github.com/disruptek/testes >= 0.2.2 & < 1.0.0"
+requires "https://github.com/disruptek/grok < 1.0.0"
+requires "https://github.com/disruptek/criterion < 1.0.0"
 
 proc execCmd(cmd: string) =
   echo "exec: " & cmd

@@ -7,3 +7,6 @@
 [submodule "criterion"]
 	path = criterion
 	url = https://github.com/disruptek/criterion
+[submodule "grok"]
+	path = grok
+	url = https://github.com/disruptek/grok
