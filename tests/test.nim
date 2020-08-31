@@ -145,6 +145,7 @@ testes:
     const q = @[1, 2, 4, 5, 6]
     ## conversion of seq to skiplist
     var s = q.toSkipList
+    var mt = toSkipList[int]()
     ## find the bottom
     s = s.bottom
     ## confirm the length

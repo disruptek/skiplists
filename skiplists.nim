@@ -510,7 +510,7 @@ proc add*[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred) =
   add(s, SkipList[T](value: v), pred = pred)
   check s, "add()"
 
-proc toSkipList*[T](values: openArray[T]): SkipList[T] =
+proc toSkipList*[T](values: openArray[T] = @[]): SkipList[T] =
   ## Create a SkipList from an openArray `values`.
   for item in items(values):
     if result.isNil:
