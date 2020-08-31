@@ -421,12 +421,11 @@ proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
       result = true
     else:
       # remove the entire file
-      while p.over <> n in {Equal}:
+      if p.over <> n in {Equal}:
         result = true
-        p.over = p.over.over
-        p = p.down
-        if p.isNil:
-          break
+        while not p.isNil:
+          p.over = p.over.over
+          p = p.down
   of Equal:
     # we need to mutate s
     var q = s.bottom
