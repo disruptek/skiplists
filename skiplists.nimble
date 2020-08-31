@@ -12,17 +12,18 @@ proc execCmd(cmd: string) =
 
 proc execTest(test: string) =
   when getEnv("GITHUB_ACTIONS", "false") != "true":
-    execCmd "nim c       -f -r " & test
-    execCmd "nim c --gc:arc -r " & test
+    execCmd "nim c          --define:skiplistsChecks -f -r " & test
+    execCmd "nim c --gc:arc --define:skiplistsChecks -f -r " & test
+    execCmd "nim c --gc:arc --define:release -f -r " & test
   else:
-    execCmd "nim c              -r " & test
-    execCmd "nim cpp            -r " & test
-    execCmd "nim c   -d:danger  -r " & test
-    execCmd "nim cpp -d:danger  -r " & test
+    execCmd "nim c              -r -f " & test
+    execCmd "nim cpp            -r -f " & test
+    execCmd "nim c   -d:danger  -r -f " & test
+    execCmd "nim cpp -d:danger  -r -f " & test
     when (NimMajor, NimMinor) >= (1, 2):
-      execCmd "nim c --useVersion:1.0 -d:danger -r " & test
-      execCmd "nim c   --gc:arc -d:danger -r " & test
-      execCmd "nim cpp --gc:arc -d:danger -r " & test
+      execCmd "nim c --useVersion:1.0 -d:danger -r -f " & test
+      execCmd "nim c   --gc:arc -d:danger -r -f " & test
+      execCmd "nim cpp --gc:arc -d:danger -r -f " & test
 
 task test, "run tests for ci":
   execTest("tests/test.nim")

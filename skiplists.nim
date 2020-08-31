@@ -4,7 +4,7 @@ import std/random
 import std/algorithm
 
 const
-  skiplistsCheckOrder {.booldefine.} = true
+  skiplistsChecks {.booldefine.} = true
   skiplistsGrowth {.intdefine.} = 4
 
 when defined(nimdoc):
@@ -27,9 +27,13 @@ macro ex(x: untyped) =
             hint indent(repr(node[1]), 4) & "\n"
 
 when (NimMajor, NimMinor) <= (1, 2):
-  type SkipListError* = object of IndexError
+  type
+    SkipListError* = object of IndexError
+    SkipListDefect* = object of AssertionError
 else:
-  type SkipListError* = object of IndexDefect
+  type
+    SkipListError* = object of IndexDefect
+    SkipListDefect* = object of AssertionDefect
 
 type
   NilSkipListError* = object of ValueError
@@ -60,18 +64,7 @@ type
 
 converter toSeq[T](s: SkipList[T]): seq[T]
 
-template staySorted(s: SkipList; body: typed) =
-  when skiplistsCheckOrder and not defined(release):
-    try:
-      body
-    finally:
-      when not defined(release):
-        if not s.isNil:
-          assert toSeq(s) == sorted(toSeq s)
-  else:
-    body
-
-proc height*(s: SkipList): int =
+proc rank*(s: SkipList): int =
   if not s.isNil:
     var s = s
     while not s.down.isNil:
@@ -165,14 +158,56 @@ template iterIt(s: typed; body: untyped) =
       it {.inject.} = s
     while not it.down.isNil:
       assert it.value == it.down.value,
-             $it.value & " versus " & $it.down.value
+             $it.value & " out of order iter " & $it.down.value
       it = it.down
     body
     while not it.over.isNil:
       assert it.value <= it.over.value,
-             $it.value & " versus " & $it.over.value
+             $it.value & " out of order iter " & $it.over.value
       it = it.over
       body
+
+iterator rank(s: SkipList): SkipList =
+  ## Yield each member of SkipList `s` rank.
+  var s = s
+  while not s.isNil:
+    yield s
+    s = s.over
+
+iterator file(s: SkipList): SkipList =
+  ## Yield each member of SkipList `s` file.
+  var s = s
+  while not s.isNil:
+    yield s
+    s = s.down
+
+when defined(release) or not skiplistsChecks:
+  template check*(s: SkipList; args: varargs[string, `$`]) = discard
+else:
+  proc check*(s: SkipList; args: varargs[string, `$`]) =
+    var msg = join(args, " ")
+    try:
+      for r in s.file:
+        assert r <> s in {Equal}
+        for n in rank(r):
+          if not n.over.isNil:
+            if n.down.isNil:
+              # dupes are permitted at the bottom
+              assert n <> n.over in {Less, Equal}
+            else:
+              # no dupes in normal rank
+              assert n <> n.over in {Less}
+          if not n.down.isNil:
+            # all members of the rank should have the same, uh, rank
+            assert n.rank == r.rank
+            # down links should always be equal
+            assert n <> n.down in {Equal}
+    except Exception as e:
+      if msg.len > 0:
+        msg &= "; "
+      msg &= e.msg
+      echo "check input:\n", s
+      raise newException(SkipListDefect, msg)
 
 iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
   ## Iterate over mutable entries in SkipList `s`.
@@ -185,12 +220,17 @@ iterator mitems*[T](s: var SkipList[T]): var T {.ex.} =
 
   iterIt(s):
     yield it.value
+  check s, "mitems()"
 
-iterator values[T](s: SkipList[T]): T =
+iterator values[T](s: SkipList[T]): string =
   ## Yield each peer value of SkipList `s`.
   var s = s
   while not s.isNil:
-    yield s.value
+    #yield $s.value
+    if s.down.isNil:
+      yield $s.value & " x " & $(cast[int](s))
+    else:
+      yield $s.value & " d " & $(cast[int](s.down))
     s = s.over
 
 iterator items*[T](s: SkipList[T]): T {.ex.} =
@@ -227,7 +267,7 @@ proc `==`*[T](s: SkipList[T]; q: openArray[T]): bool =
       else:
         break unequal
       inc i
-    result = i == len(q)
+    result = i == q.len
 
 proc hash*(s: SkipList): Hash =
   ## The `Hash` of SkipList `s` is a function of all its values.
@@ -236,10 +276,10 @@ proc hash*(s: SkipList): Hash =
     h = h !& hash(item)
   result = !$h
 
-proc find*[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
+proc find[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
   if not s.isNil:
     r = s
-    if v == s:
+    if v <> r == Equal:
       result = true
     else:
       while true:
@@ -297,7 +337,7 @@ converter toSeq[T](s: SkipList[T]): seq[T] =
     else:
       when defined(gcDestructors):
         for item in items(s):
-          assert len(result) <= size
+          assert result.len <= size
           add(result, item)
       else:
         setLen(result, size)
@@ -307,18 +347,16 @@ converter toSeq[T](s: SkipList[T]): seq[T] =
 proc `$`(s: SkipList): string {.raises: [].} =
   ## A string representing SkipList `s`; intentionally not exported.
   if s.isNil:
-    result = "*[]"
+    result = "\n*[]"
   else:
     var q = sequtils.toSeq s.values
-    when skiplistsCheckOrder:
-      assert sorted(q) == q, $q
     result = $q
     result[0] = '*'
+    result = "\n" & result
     if not s.down.isNil:
-      result.add " -> "
       result.add $s.down
 
-proc contains*[T](s: SkipList[T]; v: SkipList[T]): bool =
+proc contains[T](s: SkipList[T]; v: SkipList[T]): bool =
   ## `true` if the SkipList `s` contains SkipList `v`.
   var n: SkipList[T]
   result = s.find(v, n)
@@ -336,120 +374,156 @@ proc contains*[T](s: SkipList[T]; v: T): bool {.ex.} =
   let n = SkipList[T](value: v)
   result = n in s
 
-proc append[T](s: var SkipList[T]; v: T; down: SkipList[T] = nil)
-  {.inline.} =
-  assert not s.isNil
-  s.over = SkipList[T](over: s.over, value: v, down: down)
+proc constrain(s: var SkipList; n: SkipList;
+               narrow: var SkipList; parent: var SkipList;
+               comp: set[cmp] = {Less, Equal}): cmp =
+  assert comp - {Less, Equal} == {}
+  result = s <> n
+  if result in comp:
+    narrow = s
+    var test = result
+    while test in comp:
+      assert narrow <> narrow.over in {Less, Equal, Undefined}
+      test = narrow.over <> n
+      if test in comp:
+        narrow = narrow.over
+        result = test
+      elif test in {Undefined, More}:
+        if not narrow.down.isNil:
+          assert narrow <> narrow.down == Equal, $narrow
+          parent = narrow
+          test = constrain(narrow.down, n, narrow, parent, comp)
+          if test in comp:
+            result = test
+            break
 
-proc insert[T](s: var SkipList[T]; v: T;
-               down: SkipList[T] = nil): SkipList[T]
-  {.inline.} =
+proc append[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
   assert not s.isNil
-  result = SkipList[T](over: s, value: v, down: down)
-
-proc append[T](s: var SkipList[T]; n: SkipList[T]; up: var SkipList[T];
-               pred: SkipListPred[T] = defaultPred): bool =
-  ## Add SkipList `n` into SkipList `s`; returns `true` in the event
-  ## that growth is requested by the layer below.
-  ##
-  ## :s: The source SkipList
-  ## :n: The SkipList to append
-  ## :up: The SkipList above us; equal to `s` at the top layer.
-  ## :pred: The predicate to use for growth.
-  assert not n.isNil
-  if s.isNil:
-    raise newException(ValueError, "nil skiplist")
+  assert v >= s.value, "out of order append"
+  result = s
+  if s.down.isNil:
+    s.over = SkipList[T](over: s.over, value: v)
   else:
-    assert s <= n
-    var p = s
-    # move over to the correct file
-    while p.over <> n in {Less, Equal}:
-      p = p.over
-    if p.down.isNil:
-      # consider growing only if this isn't a duplicate value
-      result = p != n
-      # new object for atomicity
-      append(p, n.value)
-    else:
-      # recurse to the layer below, passing ourselves as "up"
-      # here we establish a difference between top-level and lower-level
-      result = append(p.down, n, p, pred = pred)
+    s.over = SkipList[T](over: s.over, value: v,
+                         down: append(s.down, v))
+    assert s <> s.down == Equal
+    assert s.over <> s.over.down == Equal
 
-    # result is true if we should consider growing
-    # similarly, if the pred fails, don't grow
-    result = result and pred(up, p, n)
-    # if we are the top level, don't grow
-    if result and s =!= up:
-      # grow by inserting an over value in our parent
-      append(up, n.value, p.over)
+proc insert[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
+  assert not s.isNil
+  assert v <= s.value, "out of order insert"
+  if s.down.isNil:
+    result = SkipList[T](over: s, value: v)
+  else:
+    result = SkipList[T](over: s, value: v,
+                         down: insert(s.down, v))
+    assert result <> result.down == Equal
+    assert result.over <> result.over.down == Equal
 
-proc insert[T](s: var SkipList[T]; n: SkipList[T]; up: var SkipList[T];
-               pred: SkipListPred[T] = defaultPred): SkipList[T] =
-  ## Prepend SkipList `n` to SkipList `s`; returns new SkipList.
+proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
+  ## Remove SkipList `n` from SkipList `s`; returns `true` if `s` changed.
   ##
   ## :s: The source SkipList
-  ## :n: The SkipList to prepend
-  ## :up: The SkipList above us; equal to `s` at the top layer.
-  ## :pred: The predicate to use for growth. (unused)
-  staySorted(s):
-    if s.isNil:
-      raise newException(ValueError, "nil skiplist")
+  ## :n: The SkipList to remove
+  var p, parent: SkipList[T]
+  case constrain(s, n, p, parent, comp = {Less})
+  of Undefined, More:
+    discard
+  of Less:
+    var q = p.bottom
+    if q.over <> n in {Equal}:
+      # dupe exists; only remove the dupe
+      q.over = q.over.over
+      result = true
     else:
-      assert n < s
-      if s.down.isNil:
-        result = insert(s, n.value)
-      else:
-        result = insert(s, n.value, insert(s.down, n, s, pred = pred))
+      # remove the entire file
+      while p.over <> n in {Equal}:
+        result = true
+        p.over = p.over.over
+        p = p.down
+        if p.isNil:
+          break
+  of Equal:
+    # we need to mutate s
+    var q = s.bottom
+    result = true
+    if q.over <> q in {Equal}:
+      # it's a dupe; simple to handle
+      q.over = q.over.over
+    else:
+      # just omit the entire file
+      s = s.over
+  check s
 
-proc add*[T](s: var SkipList[T]; n: SkipList[T];
-             pred: SkipListPred[T] = defaultPred) =
-  ## Add SkipList `n` into SkipList `s`.
-  staySorted(s):
-    if s.isNil:
-      s = n
+proc remove*[T](s: var SkipList[T]; v: T): bool {.discardable.} =
+  result = remove(s, newSkipList v)
+  check s
+
+proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
+  ## `true` if we grew.
+  var p, parent: SkipList[T]
+  var c = constrain(s, n, p, parent, comp = {Less})
+  result = c in {Equal, Less}
+  case c
+  of Undefined, More:
+    discard
+  of Equal:
+    assert s.rank == p.rank
+    assert s <> n == Equal
+    # add a rank; we're already as tall as possible
+    s = SkipList[T](value: n.value, down: s)
+    check s, "grow() equal"
+  of Less:
+    # if s and p aren't the same skiplist but they have the same rank,
+    if s =!= p and s.rank == p.rank:
+      # add a rank with s and p nodes
+      assert p.over <> n in {Equal}
+      s = SkipList[T](value: s.value, down: s,
+                      over: SkipList[T](value: n.value, down: p.over))
+    elif s.rank != p.rank:
+      # confirm that grow received input that was "close"
+      raise newException(Defect, "expected s.rank to match p.rank")
+    elif parent.isNil:
+      # essentially, add a rank with s and p values
+      assert p.over <> n in {Equal}
+      s = SkipList[T](value: s.value, down: s,
+                      over: SkipList[T](value: n.value, down: p.over))
+    # this is a non-recursive append, basically
     else:
-      case s <> n
-      of More:
-        s = insert(s, n, s, pred = pred)
-      of Equal:
-        # don't do any growth for dupes
-        # XXX: possible optimization point here
-        discard append(s, n, s, pred = pred):
-      of Less:
-        var p = s
-        # move over to the correct file
-        while p.over <> n in {Less, Equal}:
-          p = p.over
-        if append(p, n, p, pred = pred):
-          if pred(s, p, n):
-            if p == s:
-              # create a new layer with just one node
-              s = SkipList[T](value: s.value, down: s)
-            else:
-              # create a new layer with two nodes
-              s = SkipList[T](value: s.value, down: s,
-                              over: SkipList[T](value: p.value, down: p))
-      of Undefined:
-        raise newException(SkipListError, "skiplist corrupt")
+      assert p.rank != parent.rank
+      assert p <> parent == Equal
+      parent.over = SkipList[T](value: n.value, over: parent.over)
+    check s, "grow() less"
+
+proc add[T](s: var SkipList[T]; n: SkipList[T]; pred: SkipListPred[T]) =
+  ## Add SkipList `n` into SkipList `s`.
+  if s.isNil:
+    s = n
+  else:
+    var p, parent: SkipList[T]
+    case constrain(s, n, p, parent, comp = {Less})
+    of Undefined:
+      discard
+    of More:
+      # create a new file for this value
+      s = insert(s, n.value)
+    of Equal:
+      # the head is equal to the new value
+      # just append it at the bottom; dupes don't make good indices
+      p = s.bottom
+      discard append(p, n.value)
+    of Less:
+      # go ahead and append it
+      discard append(p, n.value)
+      if parent.isNil:
+        parent = s
+      while pred(parent, p, n):
+        discard grow(parent, n)
 
 proc add*[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred) =
   ## insert a value `v` in SkipList `s`
   add(s, SkipList[T](value: v), pred = pred)
-
-proc toSkipList*[T](values: var seq[T]): SkipList[T] =
-  ## Instantiate a SkipList from values `values`.
-  when skiplistsCheckOrder and not defined(release):
-    ## Will sort the input.
-    sort(values)
-  if len(values) > 0:
-    result = newSkipList(values[0])
-    var s = result
-    for item in values[1..^1]:
-      s.over = newSkipList(item)
-      assert s <= s.over, "unsorted toSkipList input"
-      s = s.over
-    assert height(result) == 0
-    assert count(result) == len(values)
+  check s, "add()"
 
 proc toSkipList*[T](values: openArray[T]): SkipList[T] =
   ## Create a SkipList from an openArray `values`.
@@ -458,3 +532,4 @@ proc toSkipList*[T](values: openArray[T]): SkipList[T] =
       result = newSkipList(item)
     else:
       add(result, item)
+  check result, "toSkipList()"
