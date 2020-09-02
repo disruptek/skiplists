@@ -57,6 +57,7 @@ type
 converter toSeq[T](s: SkipList[T]): seq[T]
 
 proc rank*(s: SkipList): int =
+  ## The higher the rank, the shorter the SkipList.
   if not s.isNil:
     var s = s
     while not s.down.isNil:
@@ -66,15 +67,16 @@ proc rank*(s: SkipList): int =
       s = s.down
 
 proc bottom*(s: SkipList): SkipList =
+  ## Traverse to the longest SkipList, which holds all values.
   if not s.isNil:
     result = s
     while not result.down.isNil:
       assert result.down.value == result.value
       result = result.down
 
-proc newSkipList*[T](v: T): SkipList[T] =
-  ## Instantiate a SkipList from value `v`.
-  result = SkipList[T](value: v)
+proc newSkipList*[T](value: T): SkipList[T] =
+  ## Instantiate a SkipList from value `value`.
+  result = SkipList[T](value: value)
 
 proc isEmpty*(s: SkipList): bool =
   ## True if SkipList `s` holds no items.
@@ -204,6 +206,7 @@ else:
   import std/strutils
 
   proc check(s: SkipList; args: varargs[string, `$`]) =
+    ## Check a SkipList for validity; `args` informs error messages.
     var msg = join(args, " ")
     try:
       for r in s.file:
@@ -283,14 +286,16 @@ proc hash*(s: SkipList): Hash =
     h = h !& hash(item)
   result = !$h
 
-proc find[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
+proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T]): bool =
+  ## Find the SkipList `value` in SkipList `s`, storing the result in `r`;
+  ## returns `true` if the value was found, else `false`.
   if not s.isNil:
     r = s
-    if v <> r == Equal:
+    if value <> r == Equal:
       result = true
     else:
       while true:
-        case v <> r.over
+        case value <> r.over
         of Undefined:
           if r.down.isNil:
             break
@@ -305,12 +310,16 @@ proc find[T](s: SkipList[T]; v: SkipList[T]; r: var SkipList[T]): bool =
         of Less:
           raise newException(SkipListDefect, "out of order")
 
-proc find*[T](s: SkipList[T]; v: T): SkipList[T] =
-  if not find(s, SkipList[T](value: v), result):
+proc find*[T](s: SkipList[T]; value: T): SkipList[T] =
+  ## Find the SkipList holding `value` in SkipList `s`; raises a KeyError`
+  ## if the value was not found.
+  if not find(s, SkipList[T](value: value), result):
     raise newException(KeyError, "not found")
 
-proc find*[T](s: SkipList[T]; v: T; r: var SkipList[T]): bool =
-  result = find(s, SkipList[T](value: v), r)
+proc find*[T](s: SkipList[T]; value: T; r: var SkipList[T]): bool =
+  ## Find `value` in SkipList `s`, storing the result in `r`;
+  ## returns `true` if the value was found, else `false`.
+  result = find(s, SkipList[T](value: value), r)
 
 proc count*(s: SkipList): int {.ex.} =
   ## Count the number of entries in SkipList `s`.
@@ -367,6 +376,9 @@ proc contains*[T](s: SkipList[T]; v: T): bool {.ex.} =
 proc constrain(s: var SkipList; n: SkipList;
                narrow: var SkipList; parent: var SkipList;
                comp: set[cmp] = {Less, Equal}): cmp =
+  ## Scope SkipList `s` to surround `n`, storing the result in `narrow`
+  ## and a SkipList with a larger rank in `parent`, if possible. Supply
+  ## `comp` to denote satisfactory cmp values for peers.
   assert comp - {Less, Equal} == {}
   result = s <> n
   if result in comp:
@@ -390,6 +402,7 @@ proc constrain(s: var SkipList; n: SkipList;
             assert false, "probably not what you want"
 
 proc append[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
+  ## The primitive append operation.
   assert not s.isNil
   assert v >= s.value, "out of order append"
   result = s
@@ -402,6 +415,7 @@ proc append[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
     assert s.over <> s.over.down == Equal
 
 proc insert[T](s: var SkipList[T]; v: T): SkipList[T] {.inline.} =
+  ## The primitive insert operation.
   assert not s.isNil
   assert v <= s.value, "out of order insert"
   if s.down.isNil:
@@ -445,8 +459,9 @@ proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
       # just omit the entire file
       s = s.over
 
-proc remove*[T](s: var SkipList[T]; v: T): bool {.discardable.} =
-  result = remove(s, newSkipList v)
+proc remove*[T](s: var SkipList[T]; value: T): bool {.discardable.} =
+  ## Remove `value` from SkipList `s`; returns `true` if `s` changed.
+  result = remove(s, newSkipList value)
   check s
 
 proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
