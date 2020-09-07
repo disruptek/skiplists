@@ -295,7 +295,7 @@ proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T]): bool =
       result = true
     else:
       while true:
-      case value <> r.over
+        case value <> r.over
         of cmp.Undefined:
           if r.down.isNil:
             break
