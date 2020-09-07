@@ -98,30 +98,30 @@ template `=!=`*(a, b: SkipList): bool =
 
 template `<>`(a, b: SkipListObj): cmp =
   if a.value < b.value:
-    Less
+    cmp.Less
   elif a.value == b.value:
-    Equal
+    cmp.Equal
   else:
-    More
+    cmp.More
 
 template `<>`(a, b: SkipList): cmp =
   ## Compare SkipList `a` and `b`.
   if a.isNil or b.isNil:
     if a.isNil and b.isNil:
-      Equal
+      cmp.Equal
     else:
-      Undefined
+      cmp.Undefined
   elif a === b:
-    Equal
+    cmp.Equal
   else:
     a[] <> b[]
 
 proc `<`*(a, b: SkipList): bool =
   ## `true` if SkipList `a` is less than SkipList `b`, else `false`.
   case a <> b
-  of Less:
+  of cmp.Less:
     result = true
-  of Undefined:
+  of cmp.Undefined:
     raise newException(EmptySkipListError, "invalid comparison")
   else:
     result = false
@@ -129,9 +129,9 @@ proc `<`*(a, b: SkipList): bool =
 proc `==`*(a, b: SkipList): bool =
   ## `true` if SkipList `a` is equal to SkipList `b`, else `false`.
   case a <> b
-  of Equal:
+  of cmp.Equal:
     result = true
-  of Undefined:
+  of cmp.Undefined:
     raise newException(EmptySkipListError, "invalid comparison")
   else:
     result = false
@@ -295,19 +295,19 @@ proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T]): bool =
       result = true
     else:
       while true:
-        case value <> r.over
-        of Undefined:
+      case value <> r.over
+        of cmp.Undefined:
           if r.down.isNil:
             break
           else:
             r = r.down
-        of More:
+        of cmp.More:
           r = r.over
-        of Equal:
+        of cmp.Equal:
           r = r.over
           result = true
           break
-        of Less:
+        of cmp.Less:
           raise newException(SkipListDefect, "out of order")
 
 proc find*[T](s: SkipList[T]; value: T): SkipList[T] =
@@ -433,26 +433,26 @@ proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
   ## :n: The SkipList to remove
   var p, parent: SkipList[T]
   case constrain(s, n, p, parent, comp = {Less})
-  of Undefined, More:
+  of cmp.Undefined, cmp.More:
     discard
-  of Less:
+  of cmp.Less:
     var q = p.bottom
-    if q.over <> n in {Equal}:
+    if q.over <> n in {cmp.Equal}:
       # dupe exists; only remove the dupe
       q.over = q.over.over
       result = true
     else:
       # remove the entire file
-      if p.over <> n in {Equal}:
+      if p.over <> n in {cmp.Equal}:
         result = true
         while not p.isNil:
           p.over = p.over.over
           p = p.down
-  of Equal:
+  of cmp.Equal:
     # we need to mutate s
     var q = s.bottom
     result = true
-    if q.over <> q in {Equal}:
+    if q.over <> q in {cmp.Equal}:
       # it's a dupe; simple to handle
       q.over = q.over.over
     else:
@@ -467,18 +467,18 @@ proc remove*[T](s: var SkipList[T]; value: T): bool {.discardable.} =
 proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
   ## `true` if we grew.
   var p, parent: SkipList[T]
-  var c = constrain(s, n, p, parent, comp = {Less})
-  result = c in {Equal, Less}
+  var c = constrain(s, n, p, parent, comp = {cmp.Less})
+  result = c in {cmp.Equal, cmp.Less}
   case c
-  of Undefined, More:
+  of cmp.Undefined, cmp.More:
     discard
   of Equal:
     assert s.rank == p.rank
-    assert s <> n == Equal
+    assert s <> n == cmp.Equal
     # add a rank; we're already as tall as possible
     s = SkipList[T](value: n.value, down: s)
-  of Less:
-    assert p.over <> n in {Equal}
+  of cmp.Less:
+    assert p.over <> n in {cmp.Equal}
     # if s and p aren't the same skiplist but they have the same rank,
     if s =!= p and s.rank == p.rank:
       # add a rank with s and p nodes
@@ -501,18 +501,18 @@ proc add[T](s: var SkipList[T]; n: SkipList[T]; pred: SkipListPred[T]) =
     s = n
   else:
     var p, parent: SkipList[T]
-    case constrain(s, n, p, parent, comp = {Less})
-    of Undefined:
+    case constrain(s, n, p, parent, comp = {cmp.Less})
+    of cmp.Undefined:
       discard
-    of More:
+    of cmp.More:
       # create a new file for this value
       s = insert(s, n.value)
-    of Equal:
+    of cmp.Equal:
       # the head is equal to the new value
       # just append it at the bottom; dupes don't make good indices
       p = s.bottom
       discard append(p, n.value)
-    of Less:
+    of cmp.Less:
       # go ahead and append it
       discard append(p, n.value)
       if parent.isNil:
