@@ -161,21 +161,21 @@ template iterIt(s: typed; body: untyped) =
       it = it.over
       body
 
-iterator rank(s: SkipList): SkipList =
+iterator rank(s: SkipList): SkipList {.used.} =
   ## Yield each member of SkipList `s` rank.
   var s = s
   while not s.isNil:
     yield s
     s = s.over
 
-iterator file(s: SkipList): SkipList =
+iterator file(s: SkipList): SkipList {.used.} =
   ## Yield each member of SkipList `s` file.
   var s = s
   while not s.isNil:
     yield s
     s = s.down
 
-iterator values[T](s: SkipList[T]): string =
+iterator values[T](s: SkipList[T]): string {.used.} =
   ## Yield each peer value of SkipList `s`.
   var s = s
   while not s.isNil:

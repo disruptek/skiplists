@@ -1,9 +1,6 @@
 [submodule "testes"]
 	path = testes
 	url = https://github.com/disruptek/testes
-[submodule "cutelog"]
-	path = cutelog
-	url = https://github.com/disruptek/cutelog
 [submodule "criterion"]
 	path = criterion
 	url = https://github.com/disruptek/criterion
