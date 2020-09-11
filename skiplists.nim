@@ -22,8 +22,10 @@ else:
       ## A defect was detected in the SkipList implementation.
 
 type
-  EmptySkipListError* = object of ValueError ##
+  SkipListEmptyError* = object of ValueError ##
     ## An empty SkipList is invalid for this operation.
+  EmptySkipListError* {.deprecated.} = SkipListEmptyError ##
+    ## Alias for SkipListEmptyError
 
   SkipListObj[T] = object
     over: SkipList[T]
@@ -122,7 +124,7 @@ proc `<`*(a, b: SkipList): bool =
   of Less:
     result = true
   of Undefined:
-    raise newException(EmptySkipListError, "invalid comparison")
+    raise newException(SkipListEmptyError, "invalid comparison")
   else:
     result = false
 
@@ -132,7 +134,7 @@ proc `==`*(a, b: SkipList): bool =
   of Equal:
     result = true
   of Undefined:
-    raise newException(EmptySkipListError, "invalid comparison")
+    raise newException(SkipListEmptyError, "invalid comparison")
   else:
     result = false
 
