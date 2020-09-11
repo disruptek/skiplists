@@ -5,7 +5,7 @@ import std/random
 import grok
 
 const
-  skiplistsChecks {.booldefine.} = true
+  skiplistsChecks {.booldefine.} = when defined(release): false else: true
   skiplistsGrowth {.intdefine.} = 4
 
 when (NimMajor, NimMinor) <= (1, 2):

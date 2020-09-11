@@ -1,4 +1,4 @@
-version = "0.2.5"
+version = "0.2.6"
 author = "disruptek"
 description = "skiplists"
 license = "MIT"
@@ -14,9 +14,10 @@ proc execCmd(cmd: string) =
 
 proc execTest(test: string) =
   when getEnv("GITHUB_ACTIONS", "false") != "true":
-    execCmd "nim c          --define:skiplistsChecks -f -r " & test
+    execCmd "nim c                  -f -r " & test
+    execCmd "nim c --define:release -f -r " & test
     when (NimMajor, NimMinor) >= (1, 2):
-      execCmd "nim c --gc:arc --define:skiplistsChecks -f -r " & test
+      execCmd "nim c --gc:arc -f -r " & test
       execCmd "nim c --gc:arc --define:release -f -r " & test
   else:
     execCmd "nim c              -r -f " & test
