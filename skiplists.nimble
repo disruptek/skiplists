@@ -15,8 +15,9 @@ proc execCmd(cmd: string) =
 proc execTest(test: string) =
   when getEnv("GITHUB_ACTIONS", "false") != "true":
     execCmd "nim c          --define:skiplistsChecks -f -r " & test
-    execCmd "nim c --gc:arc --define:skiplistsChecks -f -r " & test
-    execCmd "nim c --gc:arc --define:release -f -r " & test
+    when (NimMajor, NimMinor) >= (1, 2):
+      execCmd "nim c --gc:arc --define:skiplistsChecks -f -r " & test
+      execCmd "nim c --gc:arc --define:release -f -r " & test
   else:
     execCmd "nim c              -r -f " & test
     execCmd "nim cpp            -r -f " & test
