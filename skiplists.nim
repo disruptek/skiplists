@@ -33,6 +33,9 @@ type
     value: T
   SkipList*[T] = ref SkipListObj[T]
 
+  SkipListCmp*[T] = proc(a, b: SkipList[T]): cmp {.noSideEffect.} ##
+    ## The procedure signature to use for comparing two SkipLists.
+
   SkipListPred*[T] = proc(up: SkipList[T]; here: SkipList[T];
                           child: SkipList[T]): bool ##
     ## The predicate used to determine whether the SkipList
@@ -98,7 +101,8 @@ template `=!=`*(a, b: SkipList): bool =
   ## `false` if SkipLists `a` and `b` share the same memory, else `true`.
   not(a === b)
 
-template `<>`(a, b: SkipListObj): cmp =
+func `<>`[T](a, b: SkipListObj[T]): cmp =
+  ## Compare SkipListObj `a` and `b`.
   if a.value < b.value:
     Less
   elif a.value == b.value:
@@ -106,7 +110,7 @@ template `<>`(a, b: SkipListObj): cmp =
   else:
     More
 
-template `<>`(a, b: SkipList): cmp =
+func `<>`[T](a, b: SkipList[T]): cmp =
   ## Compare SkipList `a` and `b`.
   if a.isNil or b.isNil:
     if a.isNil and b.isNil:
@@ -203,7 +207,7 @@ proc `$`(s: SkipList): string {.raises: [].} =
       result.add $s.down
 
 when defined(release) or not skiplistsChecks:
-  template check(s: SkipList; args: varargs[string, `$`]) = discard
+  template check(s: SkipList; args: varargs[untyped]) = discard
 else:
   import std/strutils
 
@@ -288,16 +292,17 @@ proc hash*(s: SkipList): Hash =
     h = h !& hash(item)
   result = !$h
 
-proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T]): bool =
+proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];
+             compare: SkipListCmp[T] = `<>`): bool =
   ## Find the SkipList `value` in SkipList `s`, storing the result in `r`;
   ## returns `true` if the value was found, else `false`.
   if not s.isNil:
     r = s
-    if value <> r == Equal:
+    if compare(value, r) == Equal:
       result = true
     else:
       while true:
-        case value <> r.over
+        case compare(value, r.over)
         of Undefined:
           if r.down.isNil:
             break
