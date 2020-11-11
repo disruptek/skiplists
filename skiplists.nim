@@ -36,6 +36,9 @@ type
   SkipListCmp*[T] = proc(a, b: SkipList[T]): cmp {.noSideEffect.} ##
     ## The procedure signature to use for comparing two SkipLists.
 
+  SkipListFind*[T] = proc(a: SkipList[T]): cmp {.noSideEffect.} ##
+    ## The procedure signature to use for finding one SkipList.
+
   SkipListPred*[T] = proc(up: SkipList[T]; here: SkipList[T];
                           child: SkipList[T]): bool ##
     ## The predicate used to determine whether the SkipList
@@ -110,7 +113,7 @@ func `<>`[T](a, b: SkipListObj[T]): cmp =
   else:
     More
 
-func `<>`[T](a, b: SkipList[T]): cmp =
+func `<>`*[T](a, b: SkipList[T]): cmp =
   ## Compare SkipList `a` and `b`.
   if a.isNil or b.isNil:
     if a.isNil and b.isNil:
@@ -292,17 +295,19 @@ proc hash*(s: SkipList): Hash =
     h = h !& hash(item)
   result = !$h
 
-proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];
-             compare: SkipListCmp[T] = `<>`): bool =
-  ## Find the SkipList `value` in SkipList `s`, storing the result in `r`;
+proc find*[T](s: SkipList[T]; r: var SkipList[T];
+              compare: SkipListFind[T]): bool =
+  ## Find a SkipList in `s` for which `compare r` yields `Equal`,
+  ## storing the result in `r`;
   ## returns `true` if the value was found, else `false`.
   if not s.isNil:
     r = s
-    if compare(value, r) == Equal:
+    if compare(r) == Equal:
       result = true
     else:
+      r = s
       while true:
-        case compare(value, r.over)
+        case compare(r.over)
         of Undefined:
           if r.down.isNil:
             break
@@ -316,6 +321,35 @@ proc find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];
           break
         of Less:
           raise newException(SkipListDefect, "out of order")
+
+proc find*[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];
+              compare: SkipListCmp[T] = `<>`): bool =
+  ## Find the SkipList `value` in SkipList `s`, storing the result in `r`;
+  ## returns `true` if the value was found, else `false`.
+  when true:
+    func finder(s: SkipList[T]): cmp = compare(value, s)
+    result = s.find(r, compare = finder)
+  else:
+    if not s.isNil:
+      r = s
+      if compare(value, r) == Equal:
+        result = true
+      else:
+        while true:
+          case compare(value, r.over)
+          of Undefined:
+            if r.down.isNil:
+              break
+            else:
+              r = r.down
+          of More:
+            r = r.over
+          of Equal:
+            r = r.over
+            result = true
+            break
+          of Less:
+            raise newException(SkipListDefect, "out of order")
 
 proc find*[T](s: SkipList[T]; value: T): SkipList[T] =
   ## Find the SkipList holding `value` in SkipList `s`; raises a KeyError`
