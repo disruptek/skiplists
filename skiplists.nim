@@ -27,10 +27,10 @@ type
   EmptySkipListError* {.deprecated.} = SkipListEmptyError ##
     ## Alias for SkipListEmptyError
 
-  SkipListObj[T] = object
+  SkipListObj*[T] = object
     over: SkipList[T]
     down: SkipList[T]
-    value: T
+    value*: T
   SkipList*[T] = ref SkipListObj[T]
 
   SkipListCmp*[T] = proc(a, b: SkipList[T]): cmp {.noSideEffect.} ##
