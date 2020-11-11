@@ -326,30 +326,8 @@ proc find*[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];
               compare: SkipListCmp[T] = `<>`): bool =
   ## Find the SkipList `value` in SkipList `s`, storing the result in `r`;
   ## returns `true` if the value was found, else `false`.
-  when true:
-    func finder(s: SkipList[T]): cmp = compare(value, s)
-    result = s.find(r, compare = finder)
-  else:
-    if not s.isNil:
-      r = s
-      if compare(value, r) == Equal:
-        result = true
-      else:
-        while true:
-          case compare(value, r.over)
-          of Undefined:
-            if r.down.isNil:
-              break
-            else:
-              r = r.down
-          of More:
-            r = r.over
-          of Equal:
-            r = r.over
-            result = true
-            break
-          of Less:
-            raise newException(SkipListDefect, "out of order")
+  func finder(s: SkipList[T]): cmp = compare(value, s)
+  result = s.find(r, compare = finder)
 
 proc find*[T](s: SkipList[T]; value: T): SkipList[T] =
   ## Find the SkipList holding `value` in SkipList `s`; raises a KeyError`
