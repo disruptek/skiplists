@@ -69,4 +69,13 @@ testes:
   if needle in filter:
     quit 1
   let done = cpuTime()
-  echo fmt"bloom was {100 * ((done - lap) / (lap - clock)):0.2f}% faster"
+  var (a, b) = (done - lap, lap - clock)
+  var fast = "bloom"
+  if a > b:
+    swap(a, b)
+    fast = "intset"
+  when defined(windows):
+    if a == 0 or b == 0:
+      echo fmt"windows has too poor a cpuTime for this test"
+      quit 0
+  echo fmt"{fast} was {100 * (a / b):0.2f}% faster"
