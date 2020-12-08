@@ -35,8 +35,9 @@ testes:
   var needle: int
   while true:
     needle = rand(y)
-    if needle notin found:
-      break
+    if needle notin filter:
+      if needle notin found:
+        break
 
   echo fmt"filter has {k} layers of {n} units; distribution:"
   echo filter
