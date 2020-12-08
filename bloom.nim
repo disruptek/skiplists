@@ -42,8 +42,12 @@ proc `or`*[K, N](a, b: Bloom[K, N]): Bloom[K, N] =
 proc add*[K, N](bloom: var Bloom[K, N]; item: Bloomable) =
   ## Record the `item` as a member of the `bloom` filter.
   let h = hash item
-  for k, bloom in bloom.mpairs:
-    bloom.incl bucket(k, N, h)
+  when false:  # work around a nim bug in the cpp backend
+    for k, bloom in bloom.mpairs:
+      bloom.incl bucket(k, N, h)
+  else:
+    for k in bloom.low .. bloom.high:
+      bloom[k].incl bucket(k, N, h)
 
 proc del*(bloom: var Bloom; item: Bloomable) =
   {.error: "one cannot delete entries from the bloom filter".}
