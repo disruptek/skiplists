@@ -66,6 +66,11 @@ jobs:
             '--git.url:https://github.com/${{ github.repository }}' \
             '--git.commit:${{ github.sha }}' \
             "--git.devel:$branch" \
+            bloom.nim
+          nimble doc --project --outdir:docs \
+            '--git.url:https://github.com/${{ github.repository }}' \
+            '--git.commit:${{ github.sha }}' \
+            "--git.devel:$branch" \
             skiplists.nim
           # Ignore failures for older Nim
           cp docs/{the,}index.html || true

@@ -28,3 +28,4 @@ proc execTest(test: string) =
 
 task test, "run tests for ci":
   execTest("tests/test.nim")
+  execTest("tests/tbloom.nim")
