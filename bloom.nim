@@ -18,7 +18,7 @@ proc bucket(k, n: int; h: Hash): int16 =
   result = int16((h.int and uint16.high.int) mod n)
 
 proc contains*[K, N](bloom: Bloom[K, N]; item: Bloomable): bool =
-  ## `false` if the `item` is not in the `bloom` filter; else, `true`.
+  ## Yields `false` only if the `item` is not in the `bloom` filter.
   let h = hash item
   for k, bloom in bloom.pairs:
     if bucket(k, N, h) notin bloom:
@@ -50,6 +50,7 @@ proc add*[K, N](bloom: var Bloom[K, N]; item: Bloomable) =
       bloom[k].incl bucket(k, N, h)
 
 proc del*(bloom: var Bloom; item: Bloomable) =
+  ## Unsupported by bloom filters; yields a compile-time error.
   {.error: "one cannot delete entries from the bloom filter".}
 
 proc `$`*[K, N](bloom: Bloom[K, N]): string =
