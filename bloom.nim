@@ -5,17 +5,17 @@ type
     ## The item may be used in a bloom filter if it may be hashed.
     hash(c) is int
 
-  Bloom*[K, N: static int] = array[K, set[range[0 .. N-1]]]  ##
+  Bloom*[K, N: static int] = array[K, set[range[0'u16 .. uint16(N-1)]]]  ##
   ## A bloom filter of `K` layers and `N` entries per layer.
 
-proc bucket(k, n: int; h: Hash): int16 =
+proc bucket(k, n: int; h: Hash): uint16 =
   ## Produce a hash value that is sized appropriately for a set layer.
   var h: Hash = h
   if k !=  0:
     h = h !& hash(n)
     h = h !& hash(k) # make it harder for people to mix sets
     h = !$h
-  result = int16((h.int and uint16.high.int) mod n)
+  result = uint16((h.int and uint16.high.int) mod n)
 
 proc contains*[K, N](bloom: Bloom[K, N]; item: Bloomable): bool =
   ## Yields `false` only if the `item` is not in the `bloom` filter.

@@ -1,46 +1,72 @@
 import std/random
 import std/strformat
+import std/intsets
+import std/times
 
 import testes
 import bloom
 
 testes:
+  ## bloom filter test parameters:
   const
-    k = 6
-    n = 16384
-    x = 10_000
-    y = 100_000
-
+    k = 20            ## layer count
+    n = 65535         ## layer size
+    x = 100_000       ## random entries
+    y = 100_000_000   ## highest integer
   var filter: Bloom[k, n]
-  var found: seq[string]
-  var wrong, unfound: int
+  var found = initIntSet()
+  var count, unfound: int
 
   randomize()
 
-  while found.len != x:
-    let q = $rand(y)
+  ## setup some random data
+  count = 0
+  while count < x:
+    let q = rand(y)
     if q notin found:
-      filter.add q
-      found.add q
+      found.incl q
+      inc count
+
+  ## perform insertion on the filter
+  for q in found:
+    filter.add q
+
+  ## save a needle
+  var needle: int
+  while true:
+    needle = rand(y)
+    if needle notin found:
+      break
 
   echo fmt"filter has {k} layers of {n} units; distribution:"
   echo filter
   echo fmt"filter size: {filter.sizeof} bytes"
 
-  wrong = 0
+  ## calculate false positives
+  count = 0
   while unfound != x:
-    let q = $rand(y)
+    let q = rand(y)
     if q notin found:
       inc unfound
       if q in filter:
-        inc wrong
-  echo fmt"{wrong} false positives, or {100 * wrong / x:0.2f}%"
+        inc count
+  echo fmt"{count} false positives, or {100 * count / x:0.2f}%"
+  assert count.float < 0.02 * x, "too many false positives"
 
-  wrong = 0
-  while found.len > 0:
-    let q = pop found
+  ## calculate false negatives
+  count = 0
+  for q in found.items:
     if q notin filter:
-      inc wrong
-  echo fmt"{wrong} false negatives, or {100 * wrong / x:0.2f}%"
+      inc count
+  echo fmt"{count} false negatives, or {100 * count / x:0.2f}%"
+  assert count == 0, "unexpected false negative"
 
-  assert wrong.float < 0.02 * x
+  ## check the speed against a relatively fast datastructure
+  let clock = cpuTime()
+  if needle in found:
+    quit 1
+  let lap = cpuTime()
+  if needle in filter:
+    quit 1
+  let done = cpuTime()
+  echo fmt"bloom was {100 * ((done - lap) / (lap - clock)):0.2f}% faster"
