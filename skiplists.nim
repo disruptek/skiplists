@@ -210,11 +210,11 @@ proc `$`(s: SkipList): string {.raises: [].} =
       result.add $s.down
 
 when defined(release) or not skiplistsChecks:
-  template check(s: SkipList; args: varargs[untyped]) = discard
+  template checkList(s: SkipList; args: varargs[untyped]) = discard
 else:
   import std/strutils
 
-  proc check(s: SkipList; args: varargs[string, `$`]) =
+  proc checkList(s: SkipList; args: varargs[string, `$`]) =
     ## Check a SkipList for validity; `args` informs error messages.
     var msg = join(args, " ")
     try:
@@ -481,7 +481,7 @@ proc remove*[T](s: var SkipList[T]; n: SkipList[T]): bool =
 proc remove*[T](s: var SkipList[T]; value: T): bool {.discardable.} =
   ## Remove `value` from SkipList `s`; returns `true` if `s` changed.
   result = remove(s, newSkipList value)
-  check s
+  checkList s
 
 proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
   ## `true` if we grew.
@@ -542,7 +542,7 @@ proc add[T](s: var SkipList[T]; n: SkipList[T]; pred: SkipListPred[T]) =
 proc add*[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred) =
   ## Add a value `v` into SkipList `s`.
   add(s, SkipList[T](value: v), pred = pred)
-  check s, "add()"
+  checkList s, "add()"
 
 proc toSkipList*[T](values: openArray[T] = @[]): SkipList[T] =
   ## Create a SkipList from an openArray `values`.
@@ -551,7 +551,7 @@ proc toSkipList*[T](values: openArray[T] = @[]): SkipList[T] =
       result = newSkipList(item)
     else:
       add(result, item)
-  check result, "toSkipList()"
+  checkList result, "toSkipList()"
 
 proc clear*(s: var SkipList) =
   ## Empty SkipList `s` of all entries.

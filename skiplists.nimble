@@ -1,9 +1,9 @@
-version = "0.4.1"
+version = "0.4.2"
 author = "disruptek"
 description = "skiplists"
 license = "MIT"
 
-requires "https://github.com/disruptek/testes >= 0.2.2 & < 1.0.0"
+requires "https://github.com/disruptek/testes >= 0.5.1 & < 1.0.0"
 requires "https://github.com/disruptek/grok < 1.0.0"
 requires "https://github.com/disruptek/criterion < 1.0.0"
 
