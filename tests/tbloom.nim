@@ -80,7 +80,7 @@ testes:
     if a > b:
       swap(a, b)
       fast = "intset"
-    when not defined(windows):
+    when defined(windows):
       if a == 0 or b == 0:
         skip "windows is slow"
     echo fmt"{fast} was {100 * (a / b):0.2f}% faster"
