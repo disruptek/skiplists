@@ -70,6 +70,8 @@ testes:
 
   block:
     ## check the speed against a relatively fast datastructure
+    when defined(windows):
+      skip "windows is slow and, apparently, buggy"
     let clock = cpuTime()
     check needle notin found
     let lap = cpuTime()
@@ -80,7 +82,4 @@ testes:
     if a > b:
       swap(a, b)
       fast = "intset"
-    when defined(windows):
-      if a == 0 or b == 0:
-        skip "windows is slow"
     echo fmt"{fast} was {100 * (a / b):0.2f}% faster"
