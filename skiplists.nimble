@@ -3,13 +3,17 @@ author = "disruptek"
 description = "skiplists"
 license = "MIT"
 
-requires "https://github.com/disruptek/testes >= 0.5.1 & < 1.0.0"
+requires "https://github.com/disruptek/testes >= 0.6.0 & < 1.0.0"
 requires "https://github.com/disruptek/grok < 1.0.0"
 requires "https://github.com/disruptek/criterion < 1.0.0"
 
 proc execCmd(cmd: string) =
   echo "exec: " & cmd
-  exec cmd
+  try:
+    exec cmd
+  except OSError:
+    echo "test `" & cmd & "` failed"
+    quit 1
 
 proc execTest(test: string) =
   when getEnv("GITHUB_ACTIONS", "false") != "true":

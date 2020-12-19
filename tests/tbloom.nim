@@ -43,9 +43,9 @@ testes:
           break
 
   block stringification:
-    echo fmt"filter has {k} layers of {n} units; distribution:"
-    echo filter
-    echo fmt"filter size: {filter.sizeof} bytes"
+    report fmt"filter has {k} layers of {n} units; distribution:"
+    report filter
+    report fmt"filter size: {filter.sizeof} bytes"
 
   block:
     ## calculate false positives
@@ -56,7 +56,7 @@ testes:
         inc unfound
         if q in filter:
           inc count
-    echo fmt"{count} false positives, or {100 * count / x:0.2f}%"
+    report fmt"{count} false positives, or {100 * count / x:0.2f}%"
     check count.float < 0.02 * x
 
   block:
@@ -65,7 +65,7 @@ testes:
     for q in found.items:
       if q notin filter:
         inc count
-    echo fmt"{count} false negatives, or {100 * count / x:0.2f}%"
+    report fmt"{count} false negatives, or {100 * count / x:0.2f}%"
     check count == 0
 
   block:
@@ -82,4 +82,4 @@ testes:
     if a > b:
       swap(a, b)
       fast = "intset"
-    echo fmt"{fast} was {100 * (a / b):0.2f}% faster"
+    report fmt"{fast} was {100 * (a / b):0.2f}% faster"
