@@ -31,7 +31,7 @@ proc attempt(cmd: string): bool =
     exec "nim --version"
 
 # set some default matrix members
-var opt = {debug: @["--debuginfo", "--embedsrc", "--stackTrace:on"]}.toTable
+var opt = {debug: @["--stackTrace:on"]}.toTable
 var cp = @[c]
 # the default gc varies with version
 var gc =
