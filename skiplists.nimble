@@ -8,6 +8,7 @@ requires "https://github.com/disruptek/grok < 1.0.0"
 requires "https://github.com/disruptek/criterion < 1.0.0"
 
 import std/[strutils, tables]
+from std/os import `/`
 
 const
   directory = "tests"
