@@ -71,15 +71,16 @@ testes:
   block:
     ## check the speed against a relatively fast datastructure
     when defined(windows):
-      skip "windows is slow and, apparently, buggy"
-    let clock = cpuTime()
-    check needle notin found
-    let lap = cpuTime()
-    check needle notin filter
-    let done = cpuTime()
-    var (a, b) = (done - lap, lap - clock)
-    var fast = "bloom"
-    if a > b:
-      swap(a, b)
-      fast = "intset"
-    report fmt"{fast} was {100 * (a / b):0.2f}% faster"
+      skip "windows is slow"
+    else:
+      let clock = cpuTime()
+      check needle notin found
+      let lap = cpuTime()
+      check needle notin filter
+      let done = cpuTime()
+      var (a, b) = (done - lap, lap - clock)
+      var fast = "bloom"
+      if a > b:
+        swap(a, b)
+        fast = "intset"
+      report fmt"{fast} was {100 * (a / b):0.2f}% faster"

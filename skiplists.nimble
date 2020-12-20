@@ -13,8 +13,8 @@ from std/os import `/`
 const
   directory = "tests"
   hints = "--hint[Cc]=off --hint[Link]=off --hint[Conf]=off " &
-          "--hint[Processing]=off"
-  pattern = "nim $1 --gc:$2 $3 --run " & hints & " $4"
+          "--hint[Processing]=off --hint[Exec]=off"
+  pattern = "nim $1 --forceBuild:on --gc:$2 $3 --run " & hints & " $4"
 
 type
   Compilers = enum c, cpp
@@ -31,7 +31,7 @@ proc attempt(cmd: string): bool =
     exec "nim --version"
 
 # set some default matrix members
-var opt = {debug: @[""]}.toTable
+var opt = {debug: @["--debuginfo", "--embedsrc", "--stackTrace:on"]}.toTable
 var cp = @[c]
 # the default gc varies with version
 var gc =
