@@ -43,9 +43,9 @@ testes:
           break
 
   block stringification:
-    report fmt"filter has {k} layers of {n} units; distribution:"
-    report filter
-    report fmt"filter size: {filter.sizeof} bytes"
+    checkpoint fmt"filter has {k} layers of {n} units; distribution:"
+    checkpoint filter
+    checkpoint fmt"filter size: {filter.sizeof} bytes"
 
   block:
     ## calculate false positives
@@ -56,7 +56,7 @@ testes:
         inc unfound
         if q in filter:
           inc count
-    report fmt"{count} false positives, or {100 * count / x:0.2f}%"
+    checkpoint fmt"{count} false positives, or {100 * count / x:0.2f}%"
     check count.float < 0.02 * x
 
   block:
@@ -65,7 +65,7 @@ testes:
     for q in found.items:
       if q notin filter:
         inc count
-    report fmt"{count} false negatives, or {100 * count / x:0.2f}%"
+    checkpoint fmt"{count} false negatives, or {100 * count / x:0.2f}%"
     check count == 0
 
   block:
@@ -83,4 +83,4 @@ testes:
       if a > b:
         swap(a, b)
         fast = "intset"
-      report fmt"{fast} was {100 * (a / b):0.2f}% faster"
+      checkpoint fmt"{fast} was {100 * (a / b):0.2f}% faster"
