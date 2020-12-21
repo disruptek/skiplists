@@ -8,4 +8,7 @@ requires "https://github.com/disruptek/grok < 1.0.0"
 requires "https://github.com/disruptek/criterion < 1.0.0"
 
 task test, "run unit tests":
-  exec "testes"
+  when defined(windows):
+    exec "testes.cmd"
+  else:
+    exec "testes"
