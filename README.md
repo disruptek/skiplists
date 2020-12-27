@@ -19,14 +19,6 @@ are friendly to concurrent modification with minimal or localized locking.
 
 For more details, [see the Wikipedia article on Skip Lists](https://en.wikipedia.org/wiki/Skip_list).
 
-## Bloom Filter
-
-I'm putting a little bloom filter implementation in this package because it's
-similar in scope and I don't want to maintain it separately.
-
-[See the documentation for the bloom module as generated directly from the
-source.](https://disruptek.github.io/skiplists/bloom.html)
-
 ## Installation
 
 ```
