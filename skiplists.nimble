@@ -11,4 +11,4 @@ task test, "run unit tests":
   when defined(windows):
     exec "testes.cmd"
   else:
-    exec "testes"
+    exec findExe"testes"
