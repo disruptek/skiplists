@@ -21,7 +21,7 @@ testes:
   block:
     ## simple comparisons
     template comparisons =
-      check:
+      check "comparisons":
         a < b
         a <= c
         c >= a
@@ -42,16 +42,10 @@ testes:
     var
       n: SkipList[int]
       m: SkipList[int]
-    try:
+    expect SkipListEmptyError:
       discard a != n
-      check false, "expected an exception"
-    except SkipListEmptyError:
-      discard
-    try:
+    expect SkipListEmptyError:
       discard n != a
-      check false, "expected an exception"
-    except SkipListEmptyError:
-      discard
     check n == m
     check n == []
     n.add 5

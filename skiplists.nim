@@ -2,7 +2,7 @@ import std/sequtils
 import std/hashes
 import std/random
 
-import grok
+from grok import ex
 
 const
   skiplistsChecks {.booldefine.} = when defined(release): false else: true
@@ -483,7 +483,7 @@ proc remove*[T](s: var SkipList[T]; value: T): bool {.discardable.} =
   result = remove(s, newSkipList value)
   checkList s
 
-proc grow[T](s: var SkipList[T]; n: SkipList[T]): bool =
+proc grow*[T](s: var SkipList[T]; n: SkipList[T]): bool =
   ## `true` if we grew.
   var p, parent: SkipList[T]
   var c = constrain(s, n, p, parent, comp = {Less})
