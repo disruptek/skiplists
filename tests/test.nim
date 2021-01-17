@@ -3,14 +3,14 @@ import std/algorithm
 import std/strutils
 import std/random
 
-import testes
+import balls
 
 # access internal fields
 include skiplists
 
 randomize()
 
-testes:
+suite "skiplists":
 
   ## convenience
   proc `==`[T](s: SkipList[T]; v: T): bool = s.value == v
@@ -69,7 +69,7 @@ testes:
 
   block:
     ## add()
-    testes:
+    suite "add()":
       ## adding stuff out of order
       var
         s = 5.newSkipList
@@ -101,7 +101,7 @@ testes:
 
   block:
     ## remove()
-    testes:
+    suite "remove()":
       var
         s = [3, 3, 5, 5, 7, 9, 9, 11, 11].toSkipList
       checkList s
