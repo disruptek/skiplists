@@ -203,7 +203,11 @@ suite "skiplists":
         when skiplistsChecks:
           [10, 100]
         else:
-          [10, 100, 1_000, 10_000]
+          when defined(js):
+            # js is too slow
+            [10, 100, 1_000]
+          else:
+            [10, 100, 1_000, 10_000]
     for z in sizes:
       ## create a big list
       for i in 1 .. z:
