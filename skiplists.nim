@@ -5,7 +5,12 @@ import std/random
 from grok import ex
 
 const
-  skiplistsChecks {.booldefine.} = when defined(release): false else: true
+  skiplistsChecks {.booldefine.} =
+    # better support for earlier nims in testing?
+    when defined(release) or defined(danger):
+      false
+    else:
+      true
   skiplistsGrowth {.intdefine.} = 4
 
 when (NimMajor, NimMinor) <= (1, 2):
