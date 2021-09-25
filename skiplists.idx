@@ -1,0 +1,39 @@
+SkipListError	skiplists.html#SkipListError	skiplists: SkipListError	
+SkipListDefect	skiplists.html#SkipListDefect	skiplists: SkipListDefect	
+SkipListEmptyError	skiplists.html#SkipListEmptyError	skiplists: SkipListEmptyError	
+EmptySkipListError	skiplists.html#EmptySkipListError	skiplists: EmptySkipListError	
+SkipListObj	skiplists.html#SkipListObj	skiplists: SkipListObj	
+SkipList	skiplists.html#SkipList	skiplists: SkipList	
+SkipListCmp	skiplists.html#SkipListCmp	skiplists: SkipListCmp	
+SkipListFind	skiplists.html#SkipListFind	skiplists: SkipListFind	
+SkipListPred	skiplists.html#SkipListPred	skiplists: SkipListPred	
+cmp	skiplists.html#cmp	skiplists: cmp	
+rank	skiplists.html#rank,SkipList	skiplists: rank(s: SkipList): int	
+bottom	skiplists.html#bottom,SkipList	skiplists: bottom(s: SkipList): SkipList	
+newSkipList	skiplists.html#newSkipList,T	skiplists: newSkipList[T](value: T): SkipList[T]	
+isEmpty	skiplists.html#isEmpty,SkipList	skiplists: isEmpty(s: SkipList): bool	
+`===`	skiplists.html#===,SkipList,SkipList	skiplists: `===`(a, b: SkipList): bool	
+`=!=`	skiplists.html#=!=.t,SkipList,SkipList	skiplists: `=!=`(a, b: SkipList): bool	
+`&lt;&gt;`	skiplists.html#<>,SkipList[T],SkipList[T]	skiplists: `&lt;&gt;`[T](a, b: SkipList[T]): cmp	
+`&lt;`	skiplists.html#<,SkipList,SkipList	skiplists: `&lt;`(a, b: SkipList): bool	
+`==`	skiplists.html#==,SkipList,SkipList	skiplists: `==`(a, b: SkipList): bool	
+`&lt;=`	skiplists.html#<=.t,SkipList,SkipList	skiplists: `&lt;=`(a, b: SkipList): bool	
+`&gt;=`	skiplists.html#>=.t,SkipList,SkipList	skiplists: `&gt;=`(a, b: SkipList): bool	
+mitems	skiplists.html#mitems.i,SkipList[T]	skiplists: mitems[T](s: var SkipList[T]): var T	
+items	skiplists.html#items.i,SkipList[T]	skiplists: items[T](s: SkipList[T]): T	
+pairs	skiplists.html#pairs.i,SkipList[T]	skiplists: pairs[T](s: SkipList[T]): tuple[index: int, value: T]	
+`==`	skiplists.html#==,SkipList[T],openArray[T]	skiplists: `==`[T](s: SkipList[T]; q: openArray[T]): bool	
+hash	skiplists.html#hash,SkipList	skiplists: hash(s: SkipList): Hash	
+find	skiplists.html#find,SkipList[T],SkipList[T],SkipListFind[T]	skiplists: find[T](s: SkipList[T]; r: var SkipList[T]; compare: SkipListFind[T]): bool	
+find	skiplists.html#find,SkipList[T],SkipList[T],SkipList[T],SkipListCmp[T]	skiplists: find[T](s: SkipList[T]; value: SkipList[T]; r: var SkipList[T];\n        compare: SkipListCmp[T] = `&lt;&gt;`): bool	
+find	skiplists.html#find,SkipList[T],T	skiplists: find[T](s: SkipList[T]; value: T): SkipList[T]	
+find	skiplists.html#find,SkipList[T],T,SkipList[T]	skiplists: find[T](s: SkipList[T]; value: T; r: var SkipList[T]): bool	
+count	skiplists.html#count,SkipList	skiplists: count(s: SkipList): int	
+contains	skiplists.html#contains,SkipList[T],T	skiplists: contains[T](s: SkipList[T]; v: T): bool	
+remove	skiplists.html#remove,SkipList[T],SkipList[T]	skiplists: remove[T](s: var SkipList[T]; n: SkipList[T]): bool	
+remove	skiplists.html#remove,SkipList[T],T	skiplists: remove[T](s: var SkipList[T]; value: T): bool	
+grow	skiplists.html#grow,SkipList[T],SkipList[T]	skiplists: grow[T](s: var SkipList[T]; n: SkipList[T]): bool	
+add	skiplists.html#add,SkipList[T],T,SkipListPred[T]	skiplists: add[T](s: var SkipList[T]; v: T; pred: SkipListPred[T] = defaultPred)	
+toSkipList	skiplists.html#toSkipList,openArray[T]	skiplists: toSkipList[T](values: openArray[T] = @[]): SkipList[T]	
+clear	skiplists.html#clear,SkipList	skiplists: clear(s: var SkipList)	
+append	skiplists.html#append.t,SkipList[T],T	skiplists: append[T](s: var SkipList[T]; value: T)	
